@@ -72,7 +72,7 @@ jobs:
           wait: 120s
 
       - name: Load pinned versions
-        run: grep -vE '^[[:space:]]*(#|$)' .github/versions.env >> "$GITHUB_ENV"
+        run: grep -vE '^[[:space:]]*(#|$)' .github/network-versions.env >> "$GITHUB_ENV"
 
       - name: Generate falcon-values config file
         run: |

@@ -1,8 +1,8 @@
 name: Bump Solo, Consensus Node, and Mirror Node Versions
 
 # Weekly job that checks for newer Solo / consensus-node / mirror-node releases,
-# updates the single source of truth (.github/versions.env), and opens a PR so
-# CI runs the full test suite against the new versions. See issue #5235.
+# updates the single source of truth (.github/network-versions.env), and opens a PR so
+# CI runs the full test suite against the new versions.
 #
 # Uses a fixed PR branch: a re-run updates the open PR in place rather than
 # opening duplicates, and creates nothing when everything is already up to date.
@@ -17,7 +17,6 @@ permissions:
 
 jobs:
   bump-versions:
-    # GitHub-hosted: guarantees `gh` and `npm` are available for the bump script.
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -63,16 +62,16 @@ jobs:
           signoff: true
           title: 'chore: bump Solo, consensus node, and mirror node versions'
           body: |
-            Automated version bump opened by the weekly version-bump workflow (see #5235).
+            Automated version bump opened by the weekly bump-network-versions workflow.
 
-            The following pinned versions in `.github/versions.env` were updated to the latest published releases:
+            The following pinned versions in `.github/network-versions.env` were updated to the latest published releases:
 
             ${{ steps.bump.outputs.summary }}
 
             CI on this PR runs the full suite against the new versions. Review the results before merging.
           branch: chore/bump-network-versions
           base: main
-          add-paths: .github/versions.env
+          add-paths: .github/network-versions.env
           delete-branch: true
           labels: process
           assignees: swirlds-automation

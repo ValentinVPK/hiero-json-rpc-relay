@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Fetches the latest published Solo / consensus-node / mirror-node versions and
-# updates .github/versions.env in place, then reports what changed.
+# updates .github/network-versions.env in place, then reports what changed.
 #
 # "Latest" is the latest STABLE release:
 #   - Solo: the npm `latest` dist-tag (pre-releases live under other tags)
@@ -16,7 +16,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-VERSIONS_FILE="${VERSIONS_FILE:-$REPO_ROOT/.github/versions.env}"
+VERSIONS_FILE="${VERSIONS_FILE:-$REPO_ROOT/.github/network-versions.env}"
 
 CN_REPO="hiero-ledger/hiero-consensus-node"
 MN_REPO="hiero-ledger/hiero-mirror-node"

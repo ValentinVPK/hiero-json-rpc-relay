@@ -19,6 +19,7 @@ import { Utils } from '../../utils';
 import { predefined } from '../errors/JsonRpcError';
 import { MirrorNodeClientError } from '../errors/MirrorNodeClientError';
 import { SDKClientError } from '../errors/SDKClientError';
+import { DisabledTransactionTimestampIndex } from '../services/transactionTimestampIndexService/TransactionTimestampIndexFactory';
 import { WorkersPool } from '../services/workersService/WorkersPool';
 import {
   type IAccountRequestParams,
@@ -41,6 +42,7 @@ import type {
   MirrorNodeContractResultDetails,
   MirrorNodeContractResultsPage,
 } from '../types/mirrorNode';
+import { type ITransactionTimestampIndex } from '../types/transactionTimestampIndex';
 import constants from './../constants';
 import type { ICacheClient } from './cache/ICacheClient';
 import type { IOpcodesResponse } from './models/IOpcodesResponse';
@@ -200,6 +202,12 @@ export class MirrorNodeClient {
    */
   private readonly cacheService: ICacheClient;
 
+  /**
+   * Hash to consensus timestamp index for synthetic transactions, written while serving a block and read
+   * when a by-hash lookup finds nothing. Disabled unless the composition root supplies one.
+   */
+  public readonly transactionTimestampIndex: ITransactionTimestampIndex;
+
   static readonly EVM_ADDRESS_REGEX: RegExp = /\/accounts\/([\d.]+)/;
 
   public static readonly mirrorNodeContractResultsPageMax = ConfigService.get('MIRROR_NODE_CONTRACT_RESULTS_PG_MAX');
@@ -317,6 +325,7 @@ export class MirrorNodeClient {
     restClient?: AxiosInstance,
     web3Url?: string,
     web3Client?: AxiosInstance,
+    transactionTimestampIndex: ITransactionTimestampIndex = new DisabledTransactionTimestampIndex(),
   ) {
     if (!web3Url) {
       web3Url = restUrl;
@@ -367,6 +376,7 @@ export class MirrorNodeClient {
       );
     }
     this.cacheService = cacheService;
+    this.transactionTimestampIndex = transactionTimestampIndex;
 
     // set  up eth call  accepted error codes.
     const parsedAcceptedError = ConfigService.get('ETH_CALL_ACCEPTED_ERRORS');

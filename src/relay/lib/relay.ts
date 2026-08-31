@@ -27,6 +27,7 @@ import {
   LockService,
   LockStrategyFactory,
   TransactionPoolService,
+  TransactionTimestampIndexFactory,
   TransactionTracingService,
   TransactionTracingStorageFactory,
 } from './services';
@@ -340,7 +341,8 @@ export class Relay {
     this.web3Impl = new Web3Impl();
     this.netImpl = new NetImpl();
 
-    // Create Mirror Node client
+    // Create Mirror Node client. It hosts the hash-to-consensus-timestamp index so that the block paths and
+    // the by-hash paths, which both hold this client, share one instance across the worker boundary.
     this.mirrorNodeClient = new MirrorNodeClient(
       ConfigService.get('MIRROR_NODE_URL'),
       this.logger.child({ name: `mirror-node` }),
@@ -348,6 +350,8 @@ export class Relay {
       this.cacheService,
       undefined,
       ConfigService.get('MIRROR_NODE_URL_WEB3') || ConfigService.get('MIRROR_NODE_URL'),
+      undefined,
+      TransactionTimestampIndexFactory.create(this.logger.child({ name: 'tx-timestamp-index' }), this.redisClient),
     );
 
     // Create Metric service

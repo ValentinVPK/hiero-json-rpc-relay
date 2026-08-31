@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: Apache-2.0
+
+import { type RedisClientType } from 'redis';
+
+import { type ITransactionTimestampIndex } from '../../types/transactionTimestampIndex';
+import { TIMESTAMP_INDEX_KEY_PREFIX } from './constants';
+
+/**
+ * Redis-backed implementation of {@link ITransactionTimestampIndex}.
+ *
+ * Consensus timestamps are stored as plain strings under the shared {@link TIMESTAMP_INDEX_KEY_PREFIX} key
+ * namespace. TTL is applied via the `SET ... EX` option (ms converted to seconds); a non-positive TTL keeps
+ * entries indefinitely.
+ *
+ * A batch is written in a single `MULTI` so that serving one block costs one round trip rather than one per
+ * transaction.
+ *
+ * This is also the implementation that makes the index usable when the block path runs on a worker thread:
+ * worker threads cannot share an in-memory store with the main thread, but they do share Redis.
+ */
+export class RedisTransactionTimestampIndex implements ITransactionTimestampIndex {
+  /** TTL applied to keys, in seconds. `0` (or below) means no expiration. */
+  private readonly ttlSeconds: number;
+
+  /**
+   * @param redisClient - A connected Redis client.
+   * @param ttlMs - Per-entry TTL in milliseconds (`0`/`-1` = eternal).
+   */
+  constructor(
+    private readonly redisClient: RedisClientType,
+    ttlMs: number,
+  ) {
+    this.ttlSeconds = ttlMs > 0 ? Math.ceil(ttlMs / 1000) : 0;
+  }
+
+  private hashKey(hash: string): string {
+    return `${TIMESTAMP_INDEX_KEY_PREFIX}${hash}`;
+  }
+
+  async setMany(entries: ReadonlyArray<readonly [string, string]>): Promise<void> {
+    if (entries.length === 0) {
+      return;
+    }
+
+    const multi = this.redisClient.multi();
+    for (const [hash, consensusTimestamp] of entries) {
+      const hashKey = this.hashKey(hash);
+      if (this.ttlSeconds > 0) {
+        multi.set(hashKey, consensusTimestamp, { EX: this.ttlSeconds });
+      } else {
+        multi.set(hashKey, consensusTimestamp);
+      }
+    }
+    await multi.exec();
+  }
+
+  async get(hash: string): Promise<string | null> {
+    return await this.redisClient.get(this.hashKey(hash));
+  }
+}

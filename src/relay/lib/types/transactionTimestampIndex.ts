@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+/** A transaction hash paired with the Hedera consensus timestamp of the transaction it belongs to. */
+export type TransactionTimestampEntry = readonly [hash: string, consensusTimestamp: string];
+
 /**
  * A lookup from an ethereum transaction hash to the Hedera consensus timestamp of the transaction it
  * belongs to.
@@ -28,7 +31,7 @@ export interface ITransactionTimestampIndex {
    * @param entries - `[hash, consensusTimestamp]` pairs; the hash is 0x-prefixed hex, the timestamp is the
    *   Mirror Node's `seconds.nanoseconds` string.
    */
-  setMany(entries: ReadonlyArray<readonly [hash: string, consensusTimestamp: string]>): Promise<void>;
+  setMany(entries: ReadonlyArray<TransactionTimestampEntry>): Promise<void>;
 
   /**
    * Retrieves the consensus timestamp recorded for a transaction hash.

@@ -8,6 +8,7 @@ import { ConfigService } from '../../../../../config-service/services';
 import { nanOrNumberTo0x, numberTo0x, prepend0x } from '../../../../formatters';
 import { LogsBloomUtils } from '../../../../logsBloomUtils';
 import { Utils } from '../../../../utils';
+import { isSyntheticContractRecord } from '../../../clients/mirrorNodeClient';
 import constants from '../../../constants';
 import { predefined } from '../../../errors/JsonRpcError';
 import { BlockFactory } from '../../../factories/blockFactory';
@@ -16,7 +17,7 @@ import {
   type IRegularTransactionReceiptParams,
   TransactionReceiptFactory,
 } from '../../../factories/transactionReceiptFactory';
-import { type Block, type Log, type Transaction } from '../../../model';
+import { type Log, type Transaction } from '../../../model';
 import {
   type IContractResultsParams,
   type ITransactionReceipt,
@@ -25,6 +26,7 @@ import {
   type MirrorNodeContractResultReceipt,
   type RequestDetails,
 } from '../../../types';
+import { type IGetBlockWorkerResponse } from '../../../types/IGetBlockWorkerResponse';
 import { type IReceiptRlpInput } from '../../../types/IReceiptRlpInput';
 import { type IWorkerContext } from '../../workersService/workerContext';
 import { wrapError } from '../../workersService/WorkersErrorUtils';
@@ -415,7 +417,7 @@ export async function getBlock(
   showDetails: boolean,
   requestDetails: RequestDetails,
   chain: string,
-): Promise<Block | null> {
+): Promise<IGetBlockWorkerResponse | null> {
   const { commonService, mirrorNodeClient, logger } = ctx;
   try {
     const blockResponse: MirrorNodeBlock = await commonService.getHistoricalBlockResponse(
@@ -483,12 +485,18 @@ export async function getBlock(
       );
     }
 
-    return await BlockFactory.createBlock({
+    const syntheticTimestampEntries = contractResults
+      .filter(isSyntheticContractRecord)
+      .map((cr) => [cr.hash, cr.timestamp] as const);
+
+    const block = await BlockFactory.createBlock({
       blockResponse,
       txArray,
       gasPrice,
       receiptsRoot,
     });
+
+    return { block, syntheticTimestampEntries };
   } catch (e: unknown) {
     throw wrapError(e);
   }

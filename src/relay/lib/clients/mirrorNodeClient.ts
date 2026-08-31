@@ -80,6 +80,26 @@ export const isImmatureContractRecord = (
 export const isChildContractRecord = (record?: { nonce?: number | null; v?: number | null } | null): boolean =>
   record != null && record.nonce == null && record.v == null;
 
+/**
+ * Whether a Mirror Node contract-result record is synthetic: fabricated for a native Hedera transaction with
+ * no EVM execution. Stricter than {@link isChildContractRecord}, which also matches real inner calls.
+ */
+export const isSyntheticContractRecord = (
+  record?: {
+    gas_limit?: number | null;
+    nonce?: number | null;
+    v?: number | null;
+    r?: string | null;
+    s?: string | null;
+  } | null,
+): boolean =>
+  record != null &&
+  record.gas_limit === 0 &&
+  record.nonce == null &&
+  record.v == null &&
+  record.r == null &&
+  record.s == null;
+
 export class MirrorNodeClient {
   private static readonly GET_BLOCK_ENDPOINT = 'blocks/';
   private static readonly GET_BLOCKS_ENDPOINT = 'blocks';

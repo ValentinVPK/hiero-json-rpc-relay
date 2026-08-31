@@ -8,10 +8,12 @@ import { type ICacheClient } from '../../clients/cache/ICacheClient';
 import { MirrorNodeClient } from '../../clients/mirrorNodeClient';
 import { CacheClientFactory } from '../../factories/cacheClientFactory';
 import { RegistryFactory } from '../../factories/registryFactory';
+import { type ITransactionTimestampIndex } from '../../types/transactionTimestampIndex';
 import { AccountService } from '../ethService/accountService/AccountService';
 import { CommonService } from '../ethService/ethCommonService/CommonService';
 import { LocalPendingTransactionStorage } from '../transactionPoolService/LocalPendingTransactionStorage';
 import { TransactionPoolService } from '../transactionPoolService/transactionPoolService';
+import { TransactionTimestampIndexFactory } from '../transactionTimestampIndexService/TransactionTimestampIndexFactory';
 
 /**
  * Clients and services shared by every worker task within one execution context.
@@ -22,6 +24,7 @@ export interface IWorkerContext {
   mirrorNodeClient: MirrorNodeClient;
   commonService: CommonService;
   accountService: AccountService;
+  transactionTimestampIndex: ITransactionTimestampIndex;
 }
 
 /**
@@ -39,6 +42,7 @@ let cachedContext: IWorkerContext | null = null;
  * @param commonService - Existing common service to reuse; instantiated if omitted.
  * @param transactionPoolService - Existing transaction pool service to reuse; instantiated if omitted.
  * @param accountService - Existing account service to reuse; instantiated if omitted.
+ * @param transactionTimestampIndex - Existing hash-to-consensus-timestamp index to reuse;
  * @returns A fully wired {@link IWorkerContext}.
  */
 export function createWorkerContext(
@@ -47,6 +51,7 @@ export function createWorkerContext(
   commonService?: CommonService,
   transactionPoolService?: TransactionPoolService,
   accountService?: AccountService,
+  transactionTimestampIndex?: ITransactionTimestampIndex,
 ): IWorkerContext {
   const logger: Logger = pino({ level: ConfigService.get('LOG_LEVEL') || 'trace' });
   const register = RegistryFactory.getInstance();
@@ -56,8 +61,11 @@ export function createWorkerContext(
   if (!mirrorNodeClient) {
     mirrorNodeClient = new MirrorNodeClient(ConfigService.get('MIRROR_NODE_URL'), logger, register, cacheService);
   }
+  if (!transactionTimestampIndex) {
+    transactionTimestampIndex = TransactionTimestampIndexFactory.create(logger);
+  }
   if (!commonService) {
-    commonService = new CommonService(mirrorNodeClient, logger, cacheService);
+    commonService = new CommonService(mirrorNodeClient, logger, cacheService, transactionTimestampIndex);
   }
   if (!transactionPoolService) {
     // Can use LocalPendingTransactionStorage() as transactionPoolService is required in AccountService constructor but not used for getBalance.
@@ -65,10 +73,17 @@ export function createWorkerContext(
     transactionPoolService = new TransactionPoolService(new LocalPendingTransactionStorage(), logger, new Registry());
   }
   if (!accountService) {
-    accountService = new AccountService(cacheService, commonService, logger, mirrorNodeClient, transactionPoolService);
+    accountService = new AccountService(
+      cacheService,
+      commonService,
+      logger,
+      mirrorNodeClient,
+      transactionPoolService,
+      transactionTimestampIndex,
+    );
   }
 
-  return { logger, cacheService, mirrorNodeClient, commonService, accountService };
+  return { logger, cacheService, mirrorNodeClient, commonService, accountService, transactionTimestampIndex };
 }
 
 /**
@@ -80,6 +95,8 @@ export function createWorkerContext(
  * @param commonService - Existing common service to reuse; instantiated if omitted.
  * @param transactionPoolService - Existing transaction pool service to reuse; instantiated if omitted.
  * @param accountService - Existing account service to reuse; instantiated if omitted.
+ * @param transactionTimestampIndex - Existing hash-to-consensus-timestamp index to reuse; built by the
+ *   builder if omitted.
  * @returns A fully wired {@link IWorkerContext}.
  */
 export function getWorkerContext(
@@ -88,6 +105,7 @@ export function getWorkerContext(
   commonService?: CommonService,
   transactionPoolService?: TransactionPoolService,
   accountService?: AccountService,
+  transactionTimestampIndex?: ITransactionTimestampIndex,
 ): IWorkerContext {
   if (!cachedContext) {
     cachedContext = createWorkerContext(
@@ -96,6 +114,7 @@ export function getWorkerContext(
       commonService,
       transactionPoolService,
       accountService,
+      transactionTimestampIndex,
     );
   }
   return cachedContext;

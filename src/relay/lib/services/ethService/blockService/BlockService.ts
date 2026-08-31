@@ -8,7 +8,9 @@ import { type MirrorNodeClient } from '../../../clients/mirrorNodeClient';
 import constants from '../../../constants';
 import { type Block } from '../../../model';
 import { type ITransactionReceipt, type MirrorNodeBlock, type RequestDetails } from '../../../types';
+import { type ITransactionTimestampIndex } from '../../../types/transactionTimestampIndex';
 import { type IBlockService, type ICommonService } from '../../index';
+import { DisabledTransactionTimestampIndex } from '../../transactionTimestampIndexService/TransactionTimestampIndexFactory';
 import { WorkersPool } from '../../workersService/WorkersPool';
 
 export class BlockService implements IBlockService {
@@ -42,6 +44,13 @@ export class BlockService implements IBlockService {
    */
   private readonly mirrorNodeClient: MirrorNodeClient;
 
+  /**
+   * Forwarded to every worker task this service dispatches, so the block paths record the consensus timestamp
+   * of each synthetic transaction they resolve. Not read by this service itself.
+   * @private
+   */
+  private readonly transactionTimestampIndex: ITransactionTimestampIndex;
+
   /** Constructor */
   constructor(
     cacheService: ICacheClient,
@@ -49,12 +58,14 @@ export class BlockService implements IBlockService {
     common: ICommonService,
     mirrorNodeClient: MirrorNodeClient,
     logger: Logger,
+    transactionTimestampIndex: ITransactionTimestampIndex = new DisabledTransactionTimestampIndex(),
   ) {
     this.cacheService = cacheService;
     this.chain = chain;
     this.common = common;
     this.mirrorNodeClient = mirrorNodeClient;
     this.logger = logger;
+    this.transactionTimestampIndex = transactionTimestampIndex;
   }
 
   /**

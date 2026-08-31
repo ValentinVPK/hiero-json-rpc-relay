@@ -11,9 +11,7 @@ import { type JsonRpcError, predefined } from '../../../errors/JsonRpcError';
 import type { RequestDetails } from '../../../types';
 import { type LatestBlockNumberTimestamp } from '../../../types/mirrorNode';
 import type { IPendingPoolStatusInfo } from '../../../types/transactionPool';
-import type { ITransactionTimestampIndex } from '../../../types/transactionTimestampIndex';
 import { type TransactionPoolService } from '../../transactionPoolService/transactionPoolService';
-import { DisabledTransactionTimestampIndex } from '../../transactionTimestampIndexService/TransactionTimestampIndexFactory';
 import { WorkersPool } from '../../workersService/WorkersPool';
 import { type ICommonService } from '../ethCommonService/ICommonService';
 import { type IAccountService } from './IAccountService';
@@ -38,13 +36,6 @@ export class AccountService implements IAccountService {
    * @private
    */
   private readonly cacheService: ICacheClient;
-
-  /**
-   * Forwarded to {@link WorkersPool.run}, which needs the relay's instance to build the shared worker
-   * context. Not read by this service itself.
-   * @private
-   */
-  private readonly transactionTimestampIndex: ITransactionTimestampIndex;
 
   /**
    * The Common Service implementation that contains logic shared by other services.
@@ -115,14 +106,12 @@ export class AccountService implements IAccountService {
     logger: Logger,
     mirrorNodeClient: MirrorNodeClient,
     transactionPoolService: TransactionPoolService,
-    transactionTimestampIndex: ITransactionTimestampIndex = new DisabledTransactionTimestampIndex(),
   ) {
     this.cacheService = cacheService;
     this.common = common;
     this.logger = logger;
     this.mirrorNodeClient = mirrorNodeClient;
     this.transactionPoolService = transactionPoolService;
-    this.transactionTimestampIndex = transactionTimestampIndex;
   }
 
   /**

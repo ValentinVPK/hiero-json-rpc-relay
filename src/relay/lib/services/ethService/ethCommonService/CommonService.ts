@@ -20,8 +20,6 @@ import {
   type MirrorNodeContractResultBase,
   type RequestDetails,
 } from '../../../types';
-import { type ITransactionTimestampIndex } from '../../../types/transactionTimestampIndex';
-import { DisabledTransactionTimestampIndex } from '../../transactionTimestampIndexService/TransactionTimestampIndexFactory';
 import { WorkersPool } from '../../workersService/WorkersPool';
 import { type ICommonService } from './ICommonService';
 
@@ -55,13 +53,6 @@ export class CommonService implements ICommonService {
    * @private
    */
   private readonly logger: Logger;
-
-  /**
-   * Records the consensus timestamp of every synthetic transaction whose logs pass through this service, so
-   * that a later by-hash request the Mirror Node cannot yet answer can be resolved by timestamp instead.
-   * @private
-   */
-  private readonly transactionTimestampIndex: ITransactionTimestampIndex;
 
   /**
    * public constants
@@ -120,16 +111,10 @@ export class CommonService implements ICommonService {
     ),
   );
 
-  constructor(
-    mirrorNodeClient: MirrorNodeClient,
-    logger: Logger,
-    cacheService: ICacheClient,
-    transactionTimestampIndex: ITransactionTimestampIndex = new DisabledTransactionTimestampIndex(),
-  ) {
+  constructor(mirrorNodeClient: MirrorNodeClient, logger: Logger, cacheService: ICacheClient) {
     this.mirrorNodeClient = mirrorNodeClient;
     this.logger = logger;
     this.cacheService = cacheService;
-    this.transactionTimestampIndex = transactionTimestampIndex;
   }
 
   public static blockTagIsLatestOrPendingStrict(tag: string | null): boolean {

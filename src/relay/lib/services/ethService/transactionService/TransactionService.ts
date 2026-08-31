@@ -34,7 +34,6 @@ import type {
   RequestDetails,
   TypedEvents,
 } from '../../../types';
-import type { ITransactionTimestampIndex } from '../../../types/transactionTimestampIndex';
 import type HAPIService from '../../hapiService/hapiService';
 import type {
   IAccountService,
@@ -43,7 +42,6 @@ import type {
   TransactionPoolService,
   TransactionTracingService,
 } from '../../index';
-import { DisabledTransactionTimestampIndex } from '../../transactionTimestampIndexService/TransactionTimestampIndexFactory';
 import type { ITransactionService } from './ITransactionService';
 
 export class TransactionService implements ITransactionService {
@@ -119,14 +117,6 @@ export class TransactionService implements ITransactionService {
   private readonly transactionTracingService: TransactionTracingService;
 
   /**
-   * Consensus timestamps recorded by the block paths, called when the Mirror Node cannot resolve a
-   * transaction by hash.
-   * @private
-   * @readonly
-   */
-  private readonly transactionTimestampIndex: ITransactionTimestampIndex;
-
-  /**
    * The ID of the chain, as a hex string, as it would be returned in a JSON-RPC call.
    * @private
    */
@@ -148,7 +138,6 @@ export class TransactionService implements ITransactionService {
     lockService: LockService,
     registry: Registry,
     transactionTracingService: TransactionTracingService,
-    transactionTimestampIndex: ITransactionTimestampIndex = new DisabledTransactionTimestampIndex(),
   ) {
     this.cacheService = cacheService;
     this.chain = chain;
@@ -160,7 +149,6 @@ export class TransactionService implements ITransactionService {
     this.precheck = new Precheck(mirrorNodeClient, chain, transactionPoolService);
     this.transactionPoolService = transactionPoolService;
     this.transactionTracingService = transactionTracingService;
-    this.transactionTimestampIndex = transactionTimestampIndex;
     this.lockService = lockService;
 
     const metricName = 'rpc_relay_wrong_nonce_errors_total';

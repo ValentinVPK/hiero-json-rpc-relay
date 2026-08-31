@@ -8,7 +8,6 @@ import { ConfigService } from '../../../../config-service/services';
 import { MeasurableCache, MirrorNodeClient } from '../../clients';
 import { type ICacheClient } from '../../clients/cache/ICacheClient';
 import { RegistryFactory } from '../../factories/registryFactory';
-import { type ITransactionTimestampIndex } from '../../types/transactionTimestampIndex';
 import { getWorkerContext, type IWorkerContext } from './workerContext';
 import type { WorkerTask } from './workers';
 import { unwrapError } from './WorkersErrorUtils';
@@ -230,18 +229,11 @@ export class WorkersPool {
    * @param options - The task descriptor forwarded to the worker handler.
    * @param mirrorNodeClient - Mirror node client instance used to forward inter-thread metrics.
    * @param cacheService - Cache service instance used to forward inter-thread metrics.
-   * @param transactionTimestampIndex - The relay's hash-to-consensus-timestamp index, shared with the task in
-   *   local mode.
    * @returns A promise that resolves to the task handler's return value.
    * @throws The original error from the task handler; reconstructed from its serialized form
    *   in worker mode, or native in local mode.
    */
-  static async run(
-    options: WorkerTask,
-    mirrorNodeClient: MirrorNodeClient,
-    cacheService: ICacheClient,
-    transactionTimestampIndex?: ITransactionTimestampIndex,
-  ): Promise<any> {
+  static async run(options: WorkerTask, mirrorNodeClient: MirrorNodeClient, cacheService: ICacheClient): Promise<any> {
     if (!ConfigService.get('WORKERS_POOL_ENABLED')) {
       if (!this.handleTaskFn) {
         // Dynamic import to defer loading worker modules and their dependencies until actually needed.
@@ -249,10 +241,7 @@ export class WorkersPool {
         this.handleTaskFn = mod.default;
       }
       // Reuse the shared per-thread cached context, built from the relay's client/cache on first use.
-      return this.handleTaskFn(
-        options,
-        getWorkerContext(mirrorNodeClient, cacheService, undefined, undefined, undefined, transactionTimestampIndex),
-      );
+      return this.handleTaskFn(options, getWorkerContext(mirrorNodeClient, cacheService));
     }
 
     this.mirrorNodeClient = mirrorNodeClient;

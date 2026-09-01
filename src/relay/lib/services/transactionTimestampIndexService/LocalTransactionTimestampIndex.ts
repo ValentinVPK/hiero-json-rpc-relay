@@ -4,8 +4,8 @@ import { type Logger } from 'pino';
 import { Registry } from 'prom-client';
 
 import { LocalLRUCache } from '../../clients/cache/localLRUCache';
-import { type ITransactionTimestampIndex } from '../../types/transactionTimestampIndex';
-import { TIMESTAMP_INDEX_KEY_PREFIX } from './constants';
+import constants from '../../constants';
+import { type ITransactionTimestampIndex } from '../../types/ITransactionTimestampIndex';
 
 /**
  * Local in-memory implementation of {@link ITransactionTimestampIndex}, backed by its own
@@ -42,7 +42,7 @@ export class LocalTransactionTimestampIndex implements ITransactionTimestampInde
   }
 
   private hashKey(hash: string): string {
-    return `${TIMESTAMP_INDEX_KEY_PREFIX}${hash}`;
+    return `${constants.TX_TIMESTAMP_INDEX_KEY_PREFIX}${hash}`;
   }
 
   async setMany(entries: ReadonlyArray<readonly [string, string]>): Promise<void> {

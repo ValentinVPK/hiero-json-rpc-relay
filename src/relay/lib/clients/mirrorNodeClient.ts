@@ -35,6 +35,7 @@ import {
   MirrorNodeTransactionRecord,
   RequestDetails,
 } from '../types';
+import { type ITransactionTimestampIndex } from '../types/ITransactionTimestampIndex';
 import type {
   ContractAction,
   MirrorNodeBlock,
@@ -42,7 +43,6 @@ import type {
   MirrorNodeContractResultDetails,
   MirrorNodeContractResultsPage,
 } from '../types/mirrorNode';
-import { type ITransactionTimestampIndex } from '../types/transactionTimestampIndex';
 import constants from './../constants';
 import type { ICacheClient } from './cache/ICacheClient';
 import type { IOpcodesResponse } from './models/IOpcodesResponse';

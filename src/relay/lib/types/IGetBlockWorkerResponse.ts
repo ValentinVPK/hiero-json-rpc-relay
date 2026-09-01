@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { type Block } from '../model';
-import { type TransactionTimestampEntry } from './transactionTimestampIndex';
+import { type TransactionTimestampEntry } from './ITransactionTimestampIndex';
 
 /**
  * Result of the `getBlock` worker task.

@@ -10,7 +10,7 @@ export * from './mirrorNode';
 export * from './RequestDetails';
 export * from './requestParams';
 export * from './spendingPlanConfig';
-export * from './transactionTimestampIndex';
+export * from './ITransactionTimestampIndex';
 export * from './transactionTracing';
 export * from './registry';
 export * from './debug';

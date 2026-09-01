@@ -4,7 +4,7 @@ import { type Logger } from 'pino';
 import { type RedisClientType } from 'redis';
 
 import { ConfigService } from '../../../../config-service/services';
-import { type ITransactionTimestampIndex } from '../../types/transactionTimestampIndex';
+import { type ITransactionTimestampIndex } from '../../types/ITransactionTimestampIndex';
 import { LocalTransactionTimestampIndex } from './LocalTransactionTimestampIndex';
 import { RedisTransactionTimestampIndex } from './RedisTransactionTimestampIndex';
 

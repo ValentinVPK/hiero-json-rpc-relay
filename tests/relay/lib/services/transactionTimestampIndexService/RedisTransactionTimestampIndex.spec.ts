@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { pino } from 'pino';
 import { createClient, type RedisClientType } from 'redis';
 
-import { TIMESTAMP_INDEX_KEY_PREFIX } from '../../../../../src/relay/lib/services/transactionTimestampIndexService/constants';
+import constants from '../../../../../src/relay/lib/constants';
 import { RedisTransactionTimestampIndex } from '../../../../../src/relay/lib/services/transactionTimestampIndexService/RedisTransactionTimestampIndex';
 import { useInMemoryRedisServer } from '../../../helpers';
 
@@ -75,7 +75,7 @@ describe('RedisTransactionTimestampIndex Test Suite', function () {
   it('stores entries under the shared key prefix', async () => {
     await index.setMany([[HASH, TIMESTAMP]]);
 
-    expect(await redisClient.get(TIMESTAMP_INDEX_KEY_PREFIX + HASH)).to.equal(TIMESTAMP);
+    expect(await redisClient.get(constants.TX_TIMESTAMP_INDEX_KEY_PREFIX + HASH)).to.equal(TIMESTAMP);
   });
 
   it('issues no command for an empty batch', async () => {
@@ -87,7 +87,7 @@ describe('RedisTransactionTimestampIndex Test Suite', function () {
   it('applies a TTL (EXPIRE) to stored keys when TTL is finite', async () => {
     await index.setMany([[HASH, TIMESTAMP]]);
 
-    const ttl = await redisClient.ttl(TIMESTAMP_INDEX_KEY_PREFIX + HASH);
+    const ttl = await redisClient.ttl(constants.TX_TIMESTAMP_INDEX_KEY_PREFIX + HASH);
     expect(ttl).to.be.greaterThan(0);
     expect(ttl).to.be.at.most(TTL_MS / 1000);
   });
@@ -97,14 +97,14 @@ describe('RedisTransactionTimestampIndex Test Suite', function () {
     await eternalIndex.setMany([[HASH, TIMESTAMP]]);
 
     // redis returns -1 for a key with no associated expire
-    expect(await redisClient.ttl(TIMESTAMP_INDEX_KEY_PREFIX + HASH)).to.equal(-1);
+    expect(await redisClient.ttl(constants.TX_TIMESTAMP_INDEX_KEY_PREFIX + HASH)).to.equal(-1);
   });
 
   it('persists indefinitely (no EXPIRE) when TTL is eternal (-1)', async () => {
     const eternalIndex = new RedisTransactionTimestampIndex(redisClient, -1);
     await eternalIndex.setMany([[HASH, TIMESTAMP]]);
 
-    expect(await redisClient.ttl(TIMESTAMP_INDEX_KEY_PREFIX + HASH)).to.equal(-1);
+    expect(await redisClient.ttl(constants.TX_TIMESTAMP_INDEX_KEY_PREFIX + HASH)).to.equal(-1);
   });
 
   it('applies the TTL to every entry of a batch', async () => {
@@ -114,7 +114,7 @@ describe('RedisTransactionTimestampIndex Test Suite', function () {
     ]);
 
     for (const i of [1, 2]) {
-      const ttl = await redisClient.ttl(TIMESTAMP_INDEX_KEY_PREFIX + hashOf(i));
+      const ttl = await redisClient.ttl(constants.TX_TIMESTAMP_INDEX_KEY_PREFIX + hashOf(i));
       expect(ttl, `entry ${i} should carry a TTL`).to.be.greaterThan(0);
     }
   });

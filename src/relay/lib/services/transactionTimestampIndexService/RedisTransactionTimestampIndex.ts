@@ -2,8 +2,8 @@
 
 import { type RedisClientType } from 'redis';
 
-import { type ITransactionTimestampIndex } from '../../types/transactionTimestampIndex';
-import { TIMESTAMP_INDEX_KEY_PREFIX } from './constants';
+import constants from '../../constants';
+import { type ITransactionTimestampIndex } from '../../types/ITransactionTimestampIndex';
 
 /**
  * Redis-backed implementation of {@link ITransactionTimestampIndex}.
@@ -27,7 +27,7 @@ export class RedisTransactionTimestampIndex implements ITransactionTimestampInde
   }
 
   private hashKey(hash: string): string {
-    return `${TIMESTAMP_INDEX_KEY_PREFIX}${hash}`;
+    return `${constants.TX_TIMESTAMP_INDEX_KEY_PREFIX}${hash}`;
   }
 
   async setMany(entries: ReadonlyArray<readonly [string, string]>): Promise<void> {

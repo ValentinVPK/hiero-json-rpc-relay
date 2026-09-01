@@ -8,18 +8,12 @@ import { type ITransactionTimestampIndex } from '../../types/transactionTimestam
 import { TIMESTAMP_INDEX_KEY_PREFIX } from './constants';
 
 /**
- * Local in-memory implementation of {@link ITransactionTimestampIndex}.
+ * Local in-memory implementation of {@link ITransactionTimestampIndex}, backed by its own
+ * {@link LocalLRUCache}.
  *
- * Delegates to an internal {@link LocalLRUCache} for per-entry TTL and a size bound. A private
- * {@link Registry} is used for that cache so its `rpc_relay_cache` gauge does not clash with the shared
- * relay cache's gauge on the main registry.
- *
- * The entry bound comes from `TX_TIMESTAMP_INDEX_MAX_ENTRIES` rather than the shared `CACHE_MAX`: a busy
- * block contributes many entries at once, which would evict live block, balance and gas price data were the
- * two to share the same pool.
- *
- * Overflowing this cache is harmless - the oldest entries drop early and a by-hash request falls back to the
- * behaviour it had before this index existed.
+ * The cache is bounded by `TX_TIMESTAMP_INDEX_MAX_ENTRIES` rather than the shared `CACHE_MAX`, so a busy
+ * block cannot evict live block, balance and gas price data. Overflow is harmless: a dropped entry costs a
+ * fallback, never correctness.
  */
 export class LocalTransactionTimestampIndex implements ITransactionTimestampIndex {
   private readonly cache: LocalLRUCache;
@@ -42,14 +36,7 @@ export class LocalTransactionTimestampIndex implements ITransactionTimestampInde
     );
   }
 
-  /**
-   * TTL as {@link LocalLRUCache.set} expects it: a positive ms value, or `0` for indefinite retention.
-   *
-   * A consensus timestamp never changes once assigned, so retention here is purely about memory: an expired
-   * entry costs a fallback, never correctness.
-   *
-   * @returns The per-entry TTL in ms, or `0` for indefinite retention.
-   */
+  /** TTL as {@link LocalLRUCache.set} expects it: a positive ms value, or `0` for indefinite retention. */
   private resolveTtl(): number {
     return this.ttlMs > 0 ? this.ttlMs : 0;
   }

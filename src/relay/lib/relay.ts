@@ -341,8 +341,7 @@ export class Relay {
     this.web3Impl = new Web3Impl();
     this.netImpl = new NetImpl();
 
-    // Create Mirror Node client. It hosts the hash-to-consensus-timestamp index so that the block paths and
-    // the by-hash paths, which both hold this client, share one instance across the worker boundary.
+    // Create Mirror Node client. It hosts the timestamp index, so the block and receipt paths share one.
     this.mirrorNodeClient = new MirrorNodeClient(
       ConfigService.get('MIRROR_NODE_URL'),
       this.logger.child({ name: `mirror-node` }),

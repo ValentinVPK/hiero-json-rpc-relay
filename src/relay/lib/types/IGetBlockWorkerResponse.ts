@@ -8,7 +8,7 @@ import { type TransactionTimestampEntry } from './transactionTimestampIndex';
  *
  * @property block - The assembled block.
  * @property syntheticTimestampEntries - Consensus timestamps of the block's synthetic transactions, returned
- *   as plain data so they survive the worker boundary and can be recorded on the main thread.
+ *   as plain data so they survive the worker boundary.
  */
 export interface IGetBlockWorkerResponse {
   block: Block;

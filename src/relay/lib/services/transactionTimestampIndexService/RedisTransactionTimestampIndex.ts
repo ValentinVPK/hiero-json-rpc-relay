@@ -8,15 +8,8 @@ import { TIMESTAMP_INDEX_KEY_PREFIX } from './constants';
 /**
  * Redis-backed implementation of {@link ITransactionTimestampIndex}.
  *
- * Consensus timestamps are stored as plain strings under the shared {@link TIMESTAMP_INDEX_KEY_PREFIX} key
- * namespace. TTL is applied via the `SET ... EX` option (ms converted to seconds); a non-positive TTL keeps
- * entries indefinitely.
- *
- * A batch is written in a single `MULTI` so that serving one block costs one round trip rather than one per
- * transaction.
- *
- * This is also the implementation that makes the index usable when the block path runs on a worker thread:
- * worker threads cannot share an in-memory store with the main thread, but they do share Redis.
+ * A batch is written in a single `MULTI`, so serving one block costs one round trip rather than one per
+ * transaction. A non-positive TTL keeps entries indefinitely.
  */
 export class RedisTransactionTimestampIndex implements ITransactionTimestampIndex {
   /** TTL applied to keys, in seconds. `0` (or below) means no expiration. */

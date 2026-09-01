@@ -11,12 +11,8 @@ import { RedisTransactionTimestampIndex } from './RedisTransactionTimestampIndex
 /**
  * Disabled implementation of {@link ITransactionTimestampIndex}: writes are dropped and every lookup misses.
  *
- * Returned by {@link TransactionTimestampIndexFactory} when `TX_TIMESTAMP_INDEX_ENABLED` is off, so that
- * callers hold a non-optional collaborator and need no enablement check of their own. A miss is the answer
- * the relay gave before this index existed, so the by-hash paths keep their original behaviour.
- *
- * Lives beside the factory rather than in its own file: the factory is its only caller, and it has no state
- * or logic to justify the separation.
+ * Returned when `TX_TIMESTAMP_INDEX_ENABLED` is off, so holders need no enablement check of their own. A miss
+ * is the answer the relay gave before this index existed.
  */
 export class DisabledTransactionTimestampIndex implements ITransactionTimestampIndex {
   async setMany(): Promise<void> {
@@ -30,25 +26,14 @@ export class DisabledTransactionTimestampIndex implements ITransactionTimestampI
 
 /**
  * Creates {@link ITransactionTimestampIndex} instances: Redis-backed when a connected client is provided,
- * otherwise local in-memory, and a disabled no-op when `TX_TIMESTAMP_INDEX_ENABLED` is off.
- *
- * Two differences from {@link TransactionTracingStorageFactory}, both deliberate:
- *
- * Enablement and sizing are resolved here rather than by the caller. The index is built from two independent
- * places - the relay's service wiring and the worker context - and reading the configuration once, here,
- * keeps those two from drifting apart.
- *
- * Being disabled yields a {@link DisabledTransactionTimestampIndex} rather than `undefined`, so consumers
- * hold a non-optional collaborator. That keeps every signature along the injection chain non-optional, which
- * is what lets the compiler reject a call site that fails to pass the shared instance. There is no
- * `isEnabled()` counterpart either: nothing outside this factory needs to ask, because the feature has no
- * surface to refuse when switched off.
+ * otherwise local in-memory, and disabled when `TX_TIMESTAMP_INDEX_ENABLED` is off.
  */
 export class TransactionTimestampIndexFactory {
   /**
    * @param logger - Logger passed to the local implementation's internal cache.
    * @param redisClient - Optional connected Redis client; when present, Redis-backed storage is created.
-   * @returns A disabled index when switched off, a Redis-backed one when a client is supplied, otherwise a local one.
+   * @returns A disabled index when switched off, a Redis-backed one when a client is supplied, otherwise a
+   *   local one.
    */
   static create(logger: Logger, redisClient?: RedisClientType): ITransactionTimestampIndex {
     if (!ConfigService.get('TX_TIMESTAMP_INDEX_ENABLED')) {

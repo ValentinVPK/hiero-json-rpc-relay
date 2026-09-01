@@ -244,8 +244,6 @@ export class BlockService implements IBlockService {
       return null;
     }
 
-    // Recorded here, not in the worker, which may be a separate thread. Awaited so the entry lands before
-    // the receipt requests that follow, and never allowed to fail the block response.
     try {
       await this.mirrorNodeClient.transactionTimestampIndex.setMany(result.syntheticTimestampEntries);
     } catch (error) {

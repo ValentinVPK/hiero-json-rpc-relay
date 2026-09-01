@@ -341,7 +341,7 @@ export class Relay {
     this.web3Impl = new Web3Impl();
     this.netImpl = new NetImpl();
 
-    // Create Mirror Node client. It hosts the timestamp index, so the block and receipt paths share one.
+    // Create Mirror Node client.
     this.mirrorNodeClient = new MirrorNodeClient(
       ConfigService.get('MIRROR_NODE_URL'),
       this.logger.child({ name: `mirror-node` }),

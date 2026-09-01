@@ -119,13 +119,6 @@ describe('RedisTransactionTimestampIndex Test Suite', function () {
     }
   });
 
-  // Note: use disconnect() (no QUIT round-trip) to avoid hanging or
-  // "Socket closed unexpectedly" when the in-memory Redis server is
-  // shutting down in its own after-hook. This after() is declared after
-  // useInMemoryRedisServer(...), so Mocha runs it first, ensuring the
-  // client disconnects before the server stops. Leaving the client open
-  // strands a reconnecting socket for the rest of the run, which is enough
-  // to tip timing-sensitive suites over their timeouts.
   after(async () => {
     if (redisClient?.isOpen) {
       await redisClient.disconnect();

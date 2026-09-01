@@ -154,7 +154,8 @@ describe('MirrorNodeClient', async function () {
     // Shapes captured from testnet block 39363179 and from a mainnet contract-result page.
     const synthetic = { gas_limit: 0, nonce: null, v: null, r: null, s: null };
     const real = { gas_limit: 622500, nonce: 563318, v: 628, r: '0xeb7cdd87', s: '0x3dc6b242' };
-    const innerCall = { gas_limit: 150000, nonce: null, v: null, r: null, s: null };
+    // A HAPI-submitted CONTRACTCALL: no ethereum signature, but it executed and resolves by hash.
+    const hapiContractCall = { gas_limit: 150000, nonce: null, v: null, r: null, s: null };
 
     it('accepts a synthetic record', () => {
       expect(isSyntheticContractRecord(synthetic)).to.be.true;
@@ -165,8 +166,8 @@ describe('MirrorNodeClient', async function () {
     });
 
     // isChildContractRecord matches these; a receipt built from their logs would have the wrong shape.
-    it('rejects an inner call of a real transaction', () => {
-      expect(isSyntheticContractRecord(innerCall)).to.be.false;
+    it('rejects a HAPI-submitted contract call', () => {
+      expect(isSyntheticContractRecord(hapiContractCall)).to.be.false;
     });
 
     it('rejects a record whose gas limit is unpopulated', () => {

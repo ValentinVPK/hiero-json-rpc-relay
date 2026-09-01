@@ -81,8 +81,11 @@ export const isChildContractRecord = (record?: { nonce?: number | null; v?: numb
   record != null && record.nonce == null && record.v == null;
 
 /**
- * Whether a Mirror Node contract-result record is synthetic: fabricated for a native Hedera transaction with
- * no EVM execution. Stricter than {@link isChildContractRecord}, which also matches real inner calls.
+ * Whether a Mirror Node contract-result record is synthetic: fabricated for a native Hedera transaction
+ * (CRYPTOTRANSFER, TOKENMINT and the like) that never reached the EVM, so it has no gas limit.
+ *
+ * Stricter than {@link isChildContractRecord}, which also matches HAPI-submitted CONTRACTCALL records: those
+ * carry no ethereum signature either, but they did execute and are resolvable by hash.
  */
 export const isSyntheticContractRecord = (
   record?: {

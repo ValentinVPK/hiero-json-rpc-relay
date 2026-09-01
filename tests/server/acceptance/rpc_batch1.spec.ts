@@ -933,29 +933,29 @@ describe('@api-batch-1 RPC Server Acceptance Tests', function () {
         expect(transactionReceipt).to.have.property('logs').with.lengthOf.greaterThan(1);
       });
 
-      it('@release should build the same synthetic receipt when resolved by recorded consensus timestamp', async function () {
+      it('@release should resolve a synthetic receipt by its recorded consensus timestamp', async function () {
         const fixture = new MultiLogReceiptFixture(servicesNode.client, mirrorNode);
         const blockNumber = await fixture.createBlockWithMultiLogSyntheticTransaction();
 
         const blockReceipts = await relay.call(RelayCalls.ETH_ENDPOINTS.ETH_GET_BLOCK_RECEIPTS, [blockNumber]);
         expect(blockReceipts).to.be.an('array').with.lengthOf(1);
         const fromBlockPath = blockReceipts[0];
+        const transactionHash = fromBlockPath.transactionHash;
 
-        await expect(
-          mirrorNode.get(`/contracts/results/${fromBlockPath.transactionHash}`),
-        ).to.eventually.be.rejectedWith(/404/);
+        await expect(mirrorNode.get(`/contracts/results/${transactionHash}`)).to.eventually.be.rejectedWith(/404/);
 
         await relay.call(RelayCalls.ETH_ENDPOINTS.ETH_GET_BLOCK_BY_NUMBER, [blockNumber, true]);
 
-        const fromTimestampFallback = await relay.call(RelayCalls.ETH_ENDPOINTS.ETH_GET_TRANSACTION_RECEIPT, [
-          fromBlockPath.transactionHash,
-        ]);
+        const receipt = await relay.call(RelayCalls.ETH_ENDPOINTS.ETH_GET_TRANSACTION_RECEIPT, [transactionHash]);
 
-        const comparable = (receipt: any) => {
-          const { cumulativeGasUsed: _cumulativeGasUsed, effectiveGasPrice: _effectiveGasPrice, ...rest } = receipt;
-          return rest;
-        };
-        expect(comparable(fromTimestampFallback)).to.deep.equal(comparable(fromBlockPath));
+        expect(receipt.logs).to.deep.equal(fromBlockPath.logs);
+        expect(receipt.logs).to.have.lengthOf.greaterThan(1);
+
+        for (const field of ['transactionHash', 'blockHash', 'blockNumber', 'transactionIndex', 'status']) {
+          expect(receipt[field], field).to.equal(fromBlockPath[field]);
+        }
+
+        expect(receipt.from).to.equal(ethers.ZeroAddress);
       });
     });
   });

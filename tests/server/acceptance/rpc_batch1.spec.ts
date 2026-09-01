@@ -932,6 +932,31 @@ describe('@api-batch-1 RPC Server Acceptance Tests', function () {
         ]);
         expect(transactionReceipt).to.have.property('logs').with.lengthOf.greaterThan(1);
       });
+
+      it('@release should build the same synthetic receipt when resolved by recorded consensus timestamp', async function () {
+        const fixture = new MultiLogReceiptFixture(servicesNode.client, mirrorNode);
+        const blockNumber = await fixture.createBlockWithMultiLogSyntheticTransaction();
+
+        const blockReceipts = await relay.call(RelayCalls.ETH_ENDPOINTS.ETH_GET_BLOCK_RECEIPTS, [blockNumber]);
+        expect(blockReceipts).to.be.an('array').with.lengthOf(1);
+        const fromBlockPath = blockReceipts[0];
+
+        await expect(
+          mirrorNode.get(`/contracts/results/${fromBlockPath.transactionHash}`),
+        ).to.eventually.be.rejectedWith(/404/);
+
+        await relay.call(RelayCalls.ETH_ENDPOINTS.ETH_GET_BLOCK_BY_NUMBER, [blockNumber, true]);
+
+        const fromTimestampFallback = await relay.call(RelayCalls.ETH_ENDPOINTS.ETH_GET_TRANSACTION_RECEIPT, [
+          fromBlockPath.transactionHash,
+        ]);
+
+        const comparable = (receipt: any) => {
+          const { cumulativeGasUsed: _cumulativeGasUsed, effectiveGasPrice: _effectiveGasPrice, ...rest } = receipt;
+          return rest;
+        };
+        expect(comparable(fromTimestampFallback)).to.deep.equal(comparable(fromBlockPath));
+      });
     });
   });
 });
